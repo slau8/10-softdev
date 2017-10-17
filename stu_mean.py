@@ -44,11 +44,13 @@ print 'GRADEBOOK: '
 print gradebook
 
 # ============CALCULATE AVERAGE AND DISPLAY============
+print "STUDENTS' AVERAGES: "
+print "\n"
 for student in gradebook:
     key = student # student id
     name = gradebook[student][0]
     scores = gradebook[student][1:] # list of student scores
-    average = sum(scores) * 1.0 / len(scores) 
+    average = sum(scores) * 1.0 / len(scores)
     print name + ", " + str(key) + ", " + str(average)
 
 
