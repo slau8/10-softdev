@@ -5,61 +5,52 @@ HW10 -- Average
 2017-10-16
 '''
 
-import sqlite3   #enable control of an sqlite database
-import csv       #facilitates CSV I/O
+import sqlite3, csv
 
 f = "discobandit.db"
+db = sqlite3.connect(f)
+c = db.cursor()
 
-db = sqlite3.connect(f) #open if f exists, otherwise create
-c = db.cursor()    #facilitate db ops
-
-# Create table for 'peeps' data
+# ============CREATE AND POPULATE TABLES============
+# create peeps and courses tables
 c.execute("CREATE TABLE peeps (name TEXT, age INTEGER, id INTEGER)")
+c.execute("CREATE TABLE courses (code TEXT, mark INTEGER, id INTEGER)")
+
+# populate tables
 peeps = csv.DictReader(open("peeps.csv"))
-# Inserts data into 'peeps' table
 for row in peeps:
     c.execute("INSERT INTO peeps VALUES ('" + row['name'] + "', " + row['age'] + ", " + row['id'] + ")")
-
-# Create table for 'courses' data
-c.execute("CREATE TABLE courses (code TEXT, mark INTEGER, id INTEGER)")
 courses = csv.DictReader(open("courses.csv"))
-# Inserts data into 'course' table
 for row in courses:
     c.execute("INSERT INTO courses VALUES ('" + row['code'] + "', " + row['mark'] + ", " + row['id'] + ")")
 
-students = c.execute("SELECT name,peeps.id,mark FROM peeps,courses WHERE peeps.id = courses.id")
-# for student in students:
-#     print(student)
+# ============COLLECT EACH STUDENT'S GRADE============
+# create [][] with name | id | mark
+data = c.execute("SELECT name,peeps.id,mark FROM peeps,courses WHERE peeps.id = courses.id")
+print data
 
-#c.execute("CREATE TABLE averages (name TEXT, id INTEGER, average INTEGER)")
-first_id = True #checks to see if its the first occurence of that id
-curr_id = 0 # current id
-count = 0 # counts number of classes per student
-total = 0 # sum of student's marks
+# create {id: [mark1, mark2, mark 3], ...}
+gradebook = {}
+for student in data:
+    name = student[0]
+    key = student[1] # student id
+    mark = student[2]
+    if key in gradebook:
+        gradebook[key].append(mark) # add the mark to the list
+    else:
+        gradebook[key] = [name, mark] # create a list with a name and mark
 
-averages = {'id': 'average'}
-for student in students:
-    #if student[1] == 1 or (student[1] == 2 and student[2] == 65):
-        #print(student)
-        if first_id:
-            curr_id = student[1]
-            first_id = False
-            #print('ran first_id')
-        if curr_id == student[1]:
-            total += student[2]
-            count+=1
-            #print('ran curr_id')
-        else:
-            averages[curr_id] = total / count
-            #print(total)
-            #print(count)
+print 'GRADEBOOK: '
+print gradebook
 
-            count = 0
-            total = 0
-            first_id = True
-            #print('ran else')
+# ============CALCULATE AVERAGE AND DISPLAY============
+for student in gradebook:
+    key = student # student id
+    name = gradebook[student][0]
+    scores = gradebook[student][1:] # list of student scores
+    average = sum(scores) * 1.0 / len(scores) 
+    print name + ", " + str(key) + ", " + str(average)
 
-print (averages)
 
 db.commit() #save changes
 db.close()  #close database
