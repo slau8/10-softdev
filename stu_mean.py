@@ -29,7 +29,7 @@ for row in courses:
 data = c.execute("SELECT name,peeps.id,mark FROM peeps,courses WHERE peeps.id = courses.id")
 print data
 
-# create {id: [mark1, mark2, mark 3], ...}
+# create {id: [name, mark1, mark2, mark 3], ...}
 gradebook = {}
 for student in data:
     name = student[0]
