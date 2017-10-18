@@ -9,8 +9,8 @@ HW10 -- Average
 import sqlite3, csv
 
 f = "discobandit.db"
-db = sqlite3.connect(f)
-c = db.cursor()
+db = sqlite3.connect(f) # open if f exists, otherwise create
+c = db.cursor() # facilitate db ops
 
 gradebook = {} # stores id, name, and marks
 
@@ -29,29 +29,30 @@ def initiate():
 
 # ============CREATE AND UPDATE GRADEBOOK============
 def create_gradebook():
-    # create [][] with name | id | mark
+    # create [][] with name | id | mark (for each class of each person)
     data = c.execute('''SELECT name,peeps.id,mark
                         FROM peeps,courses
                         WHERE peeps.id = courses.id''')
     for student in data: # student is a list
         add_mark(student) # add mark to student's grade
-    print '\n\n\nINITIALIZED GRADEBOOK: '
+    print '\n\n\nINITIALIZED GRADEBOOK:\n'
     print gradebook
 
 def update_gradebook(this_code, this_key):
+    # create [][] with name | id | mark (for the new mark to be added)
     data = c.execute('''SELECT name,peeps.id,mark
                         FROM peeps,courses
                         WHERE peeps.id = courses.id
                             AND courses.id = ?
                             AND courses.code = ?''', (this_key, this_code))
-    for student in data:
-        add_mark(student) # add mark to student's grade
-    print '\n\n\nUPDATED GRADEBOOK: '
+    for student in data: # student is a list
+        add_mark(student) # add mark to gradebook{}
+    print '\n\n\nUPDATED GRADEBOOK:\n'
     print gradebook
 
-# add mark to student's grades
+# add mark to gradebook{}
 def add_mark(student):
-    # create {id: [name, mark1, mark2, mark3], ...}
+    # {id: [name, mark1, mark2, mark3], ...}
     name = student[0]
     key = student[1] # student id
     mark = student[2]
@@ -63,13 +64,13 @@ def add_mark(student):
 # ============CREATE AND UPDATE TABLE============
 # create and print table of peeps_avg
 def create_peepsavg():
-    create_gradebook()
+    create_gradebook() # initialize gradebook{}
     c.execute("CREATE TABLE peeps_avg (id INTEGER PRIMARY KEY, average NUMERIC)")
     print '\n\n\nINITIAL TABLE WITH AVERAGES:\n'
     for student in gradebook:
         key = student # student id
         name = gradebook[student][0]
-        average = average(student)
+        average = avg(student)
         print name + ", " + str(key) + ", " + str(average)
         c.execute("INSERT INTO peeps_avg VALUES(?,?)",(key, average))
 
@@ -77,14 +78,14 @@ def create_peepsavg():
 def update_peepsavg():
     print '\n\n\nUPDATED TABLE WITH AVERAGES:\n'
     for student in gradebook:
-        key = student
+        key = student # student id
         name = gradebook[student][0]
-        this_average = average(student)
+        this_average = avg(student)
         print name + ", " + str(key) + ", " + str(this_average)
         c.execute("UPDATE peeps_avg SET average = ? WHERE id = ?", (this_average, key))
 
 # find average of student marks
-def average(student):
+def avg(student):
     scores = gradebook[student][1:] # list of student scores
     return sum(scores) * 1.0 / len(scores) # calculate average
 
@@ -96,8 +97,6 @@ def add_grade(code, mark, key):
 
 
 
-
-
 def main():
     initiate() # import data from peeps and courses
     create_peepsavg() # create table with averages
@@ -106,5 +105,5 @@ def main():
 
 main()
 
-db.commit()
-db.close()
+db.commit() # save changes
+db.close() # close database
